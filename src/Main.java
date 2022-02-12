@@ -10,5 +10,11 @@ public class Main {
 
         RandomNumberGenerator randomNumberGenerator = new RandomNumberGenerator();
         randomNumberGenerator.generate(count);
+        System.out.println("Numbers have been generated and written in the text file.");
+
+        System.out.println("Enter the RAM size");
+        int memorySize = sc.nextInt();
+        TwoPhaseMultiWayMergeSort sort = new TwoPhaseMultiWayMergeSort();
+        sort.twoPhaseSort(memorySize);
     }
 }
