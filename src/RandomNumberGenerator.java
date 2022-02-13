@@ -18,7 +18,7 @@ public class RandomNumberGenerator {
         BufferedWriter bufferedWriter = null;
         int randomNumber;
         try {
-            writer = new FileWriter("docs/file1.txt");
+            writer = new FileWriter("docs/input.txt");
             bufferedWriter = new BufferedWriter(writer);
             Random random = new Random();
             for(int i = 0; i < count; i++) {

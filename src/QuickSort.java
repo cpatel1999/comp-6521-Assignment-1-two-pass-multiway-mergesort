@@ -12,8 +12,8 @@ public class QuickSort {
      */
     public void swap(LinkedList<Integer> list, int first, int second) {
         int temporary = list.get(first);
-        list.add(first, list.get(second));
-        list.add(second, temporary);
+        list.set(first, list.get(second));
+        list.set(second, temporary);
     }
 
     /**
@@ -64,6 +64,12 @@ public class QuickSort {
         }
     }
 
+    /**
+     * Sorts the given list of integers.
+     *
+     * @param list list of integers.
+     * @return sorted list of integers.
+     */
     public LinkedList<Integer> sort(LinkedList<Integer> list) {
         quickSort(list, 0, list.size() - 1);
         return list;
