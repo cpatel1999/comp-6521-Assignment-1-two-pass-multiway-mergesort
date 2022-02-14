@@ -65,13 +65,11 @@ public class QuickSort {
     }
 
     /**
-     * Sorts the given list of integers.
+     * Sorts the given list of integers. (In place)
      *
      * @param list list of integers.
-     * @return sorted list of integers.
      */
-    public LinkedList<Integer> sort(LinkedList<Integer> list) {
+    public void sort(LinkedList<Integer> list) {
         quickSort(list, 0, list.size() - 1);
-        return list;
     }
 }

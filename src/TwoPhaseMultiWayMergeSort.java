@@ -1,67 +1,57 @@
 import java.io.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.PriorityQueue;
 import java.util.Scanner;
 
 public class TwoPhaseMultiWayMergeSort {
+    public final QuickSort quickSort = new QuickSort();
+    public Path phase1Resource = Paths.get("resources", "phase_1");
+    public Path phase2Resource = Paths.get("resources", "phase_2");
 
-    public QuickSort quickSort = new QuickSort();
-    public String path = "docs/";
-    public ArrayList<String> filesList = new ArrayList<>();
-    public int totalBlocks;
-
-    public void twoPhaseSort(int ramSize) {
+    public void twoPhaseSort(int bufferSize) {
         System.out.println("----------------------Phase 1--------------------");
         System.out.println("-------------------------------------------------");
-        phase_1(ramSize);
+        ArrayList<Path> fileList = runPhase1(bufferSize);
         System.out.println("----------------------Phase 2--------------------");
         System.out.println("-------------------------------------------------");
-        phase_2(ramSize);
+        runPhase2(fileList, bufferSize);
     }
 
-    public void phase_1(int ramSize) {
-
-        boolean run = true;
-        int recordCount = 0;
+    public ArrayList<Path> runPhase1(int bufferSize) {
+        ArrayList<Path> referenceFilePaths = new ArrayList<>();
         int dataCount = 0;
-        int currentBlock = 1;
-        try (Scanner fileReader = new Scanner(new FileReader("docs/input.txt"))) {
-            while (run) {
-
+        int currentBlock = 0;
+        try (Scanner fileReader = new Scanner(new FileReader("resources/input.txt"))) {
+            while (fileReader.hasNextLine()) {
                 LinkedList<Integer> numberList = new LinkedList<>();
                 while (fileReader.hasNextLine()) {
-
                     int number = Integer.parseInt(fileReader.nextLine().trim());
                     numberList.add(number);
-                    recordCount++;
                     ++dataCount;
-                    if (dataCount == ramSize) {
+                    if (dataCount == bufferSize) {
                         dataCount = 0;
                         break;
                     }
                 }
 
-                System.out.println("Block-" + currentBlock + " before sorting");
-                display(numberList);
-                numberList = quickSort.sort(numberList);
-                System.out.println("Block-" + currentBlock + " after sorting");
-                display(numberList);
+                display(numberList, "Block-" + (currentBlock + 1) + " before sorting");
+                quickSort.sort(numberList); /* In place sorting */
+                System.out.println();
+                display(numberList, "Block-" + (currentBlock + 1) + " after sorting");
 
-                String outputFile = path + "block-" + currentBlock + ".txt";
-                BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile));
-                for (int i = 0; i < numberList.size(); i++) {
-                    writer.write(numberList.get(i) + "\n");
+                Path outputFile = Paths.get(phase1Resource.toString(), "block-" + currentBlock + ".txt");
+                try (PrintWriter printWriter = new PrintWriter(new FileWriter(outputFile.toFile()))) {
+                    for (Integer num : numberList) {
+                        printWriter.println(num);
+                    }
                 }
-                writer.close();
 
-                filesList.add(outputFile);
-
-                if (!fileReader.hasNextLine()) {
-                    break;
-                }
+                referenceFilePaths.add(outputFile);
                 currentBlock++;
             }
-            totalBlocks = currentBlock;
         } catch (FileNotFoundException e) {
             System.out.println("File not found!");
             System.exit(0);
@@ -69,90 +59,58 @@ public class TwoPhaseMultiWayMergeSort {
             System.out.println("IO Error!");
             System.exit(0);
         }
+
+        return referenceFilePaths;
     }
 
-    public void phase_2(int ramSize) {
-        mergeSort(filesList);
-    }
-
-    public void mergeSort(ArrayList<String> list) {
-        String currentMergeFiles = null;
-        ArrayList<String> mergedFiles = new ArrayList<>();
-        int num_1;
-        int num_2;
-        int min;
-        int iteration = 0;
-        for(int i = 0; i < list.size(); i = i + 2) {
-            currentMergeFiles = path + iteration + "-block-"+ i + "_" + (i+1) + ".txt";
-//            System.out.println(i);
-            try{
-                Scanner scanner_1 = new Scanner(new FileReader(list.get(i)));
-                Scanner scanner_2 = null;
-                if(i+1 < list.size()) {
-                    scanner_2 = new Scanner(new FileReader(list.get(i + 1)));
-                }
-                System.out.println(scanner_1);
-                System.out.println(scanner_2);
-
-                BufferedWriter writer = new BufferedWriter(new FileWriter(currentMergeFiles));
-                if(scanner_2 != null) {
-                    num_1 = scanner_1.nextInt();
-                    num_2 = scanner_2.nextInt();
-                    while (true) {
-                        if (num_1 < num_2) {
-                            min = num_1;
-                            if (scanner_1.hasNext()) {
-                                num_1 = scanner_1.nextInt();
-                            } else {
-                                writer.write(min + "\n");
-                                writer.write(num_2 + "\n");
-                                break;
-                            }
-                        } else {
-                            min = num_2;
-                            if (scanner_2.hasNext()) {
-                                num_2 = scanner_2.nextInt();
-                            } else {
-                                writer.write(min + "\n");
-                                writer.write(num_1 + "\n");
-                                break;
-                            }
-                        }
-                        writer.write(min + "\n");
-                    }
-
-                    while (scanner_1.hasNextLine()) {
-                        writer.write(scanner_1.nextInt());
-                    }
-                    while (scanner_2.hasNextLine()) {
-                        writer.write(scanner_2.nextInt());
-                    }
-                    scanner_2.close();
-                }
-//                else {
-//                    while (scanner_1.hasNextLine()) {
-//                        writer.write(scanner_1.nextInt());
-//                    }
-//                }
-                mergedFiles.add(currentMergeFiles);
-                scanner_1.close();
-                writer.close();
-            } catch (FileNotFoundException e) {
-                System.out.println("File not found!");
-            } catch (IOException e) {
-                System.out.println("IO Error!");
+    public void runPhase2(ArrayList<Path> list, int blockSize) {
+        ArrayList<BufferedReader> inputBlockFiles = new ArrayList<>();
+        ArrayList<String> corruptedFiles = new ArrayList<>();
+        for (Path inputBlock : list) {
+            try {
+                inputBlockFiles.add(new BufferedReader(new FileReader(inputBlock.toFile()), blockSize /* bytes */));
+            } catch (IOException ignored) {
+                corruptedFiles.add(inputBlock.toString());
             }
         }
-        if(mergedFiles.size() > 1) {
-            mergeSort(mergedFiles);
+
+        int outputBlockIndex = 0;
+        while (outputBlockIndex < inputBlockFiles.size()) {
+            PriorityQueue<Integer> bufferedNumbers = new PriorityQueue<>(inputBlockFiles.size());
+            for (BufferedReader bufferedReader : inputBlockFiles) {
+                try {
+                    String line;
+                    if ((line = bufferedReader.readLine()) != null) {
+                        bufferedNumbers.add(Integer.parseInt(line));
+                    }
+                } catch (IOException ignored) {
+                }
+            }
+
+            String fileName = "merged-block-" + outputBlockIndex + ".txt";
+            try (PrintWriter pw = new PrintWriter(new FileWriter(Paths.get(phase2Resource.toString(), fileName).toFile()))) {
+                // Dump merged numbers to disk.
+                while (!bufferedNumbers.isEmpty()) pw.println(bufferedNumbers.poll());
+            } catch (IOException ignored) {
+            }
+
+            outputBlockIndex++;
+        }
+
+        if (corruptedFiles.size() > 0) {
+            // Corrupted files
+            System.out.println("Corrupted files:");
+            for (String corruptedFile : corruptedFiles)
+                System.out.println(corruptedFile);
         }
     }
 
-
-
-    public void display(LinkedList<Integer> list) {
-        for(int i = 0; i < list.size(); i++) {
-            System.out.println(list.get(i));
+    public void display(LinkedList<Integer> list, String title) {
+        if (!title.isEmpty()) {
+            System.out.println(title);
+        }
+        for (Integer integer : list) {
+            System.out.println(integer);
         }
     }
 }
