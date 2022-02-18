@@ -17,9 +17,10 @@ class Element {
 }
 
 public class TwoPhaseMultiWayMergeSort {
-    public final QuickSort quickSort = new QuickSort();
-    public Path phase1Resource = Paths.get("resources", "phase_1");
-    public Path phase2Resource = Paths.get("resources", "phase_2");
+    private final QuickSort quickSort = new QuickSort();
+    private Path phase1Resource = Paths.get("resources", "phase_1");
+    private Path phase2Resource = Paths.get("resources", "phase_2");
+    private int totalTuples = 0;
 
     public void twoPhaseSort(int bufferSize) {
         System.out.println("----------------------Phase 1--------------------");
@@ -41,6 +42,7 @@ public class TwoPhaseMultiWayMergeSort {
                     int number = Integer.parseInt(fileReader.nextLine().trim());
                     numberList.add(number);
                     ++dataCount;
+                    ++totalTuples;
                     if (dataCount == bufferSize) {
                         dataCount = 0;
                         break;
@@ -73,16 +75,23 @@ public class TwoPhaseMultiWayMergeSort {
         return referenceFilePaths;
     }
 
-    public void runPhase2(ArrayList<Path> list, int blockSize) {
+    public void runPhase2(ArrayList<Path> list, int bufferSize) {
         ArrayList<BufferedReader> inputBlockFiles = new ArrayList<>();
         ArrayList<String> corruptedFiles = new ArrayList<>();
         for (Path inputBlock : list) {
             try {
-                inputBlockFiles.add(new BufferedReader(new FileReader(inputBlock.toFile()), blockSize /* bytes */));
+                inputBlockFiles.add(new BufferedReader(new FileReader(inputBlock.toFile()), 4 /* bytes */));
             } catch (IOException ignored) {
                 corruptedFiles.add(inputBlock.toString());
             }
         }
+
+        int numOfTuples = 2 * bufferSize;
+        int passCounter = 0;
+        int processedTuples = 0;
+
+        System.out.println("=============================================");
+        System.out.println("Pass-" + (passCounter + 1));
 
         String fileName = "merged-sorted.txt";
         try (PrintWriter pw = new PrintWriter(new FileWriter(Paths.get(phase2Resource.toString(), fileName).toFile()))) {
@@ -101,7 +110,20 @@ public class TwoPhaseMultiWayMergeSort {
             // Dump merged numbers to disk.
             while (!bufferedNumbers.isEmpty()) {
                 Element minElement = bufferedNumbers.poll();
+
                 pw.println(minElement.value);
+
+                processedTuples++;
+                if (numOfTuples == processedTuples) {
+                    numOfTuples *= 2;
+                    processedTuples = 0;
+                    passCounter++;
+
+                    // New pass
+                    System.out.println("=============================================");
+                    System.out.println("Pass-" + (passCounter + 1));
+                }
+
                 String line;
                 if ((line = inputBlockFiles.get(minElement.fileIndex).readLine()) != null) {
                     bufferedNumbers.add(new Element(Integer.parseInt(line), minElement.fileIndex));
