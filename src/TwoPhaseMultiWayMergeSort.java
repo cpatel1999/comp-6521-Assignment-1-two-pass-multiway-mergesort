@@ -90,8 +90,10 @@ public class TwoPhaseMultiWayMergeSort {
         int passCounter = 0;
         int processedTuples = 0;
 
+        System.out.println();
         System.out.println("=============================================");
         System.out.println("Pass-" + (passCounter + 1));
+        System.out.println("=============================================");
 
         String fileName = "merged-sorted.txt";
         try (PrintWriter pw = new PrintWriter(new FileWriter(Paths.get(phase2Resource.toString(), fileName).toFile()))) {
@@ -112,6 +114,7 @@ public class TwoPhaseMultiWayMergeSort {
                 Element minElement = bufferedNumbers.poll();
 
                 pw.println(minElement.value);
+                System.out.println(minElement.value);
 
                 processedTuples++;
                 if (numOfTuples == processedTuples) {
@@ -120,8 +123,10 @@ public class TwoPhaseMultiWayMergeSort {
                     passCounter++;
 
                     // New pass
+                    System.out.println();
                     System.out.println("=============================================");
                     System.out.println("Pass-" + (passCounter + 1));
+                    System.out.println("=============================================");
                 }
 
                 String line;
