@@ -75,26 +75,27 @@ public class TwoPhaseMultiWayMergeSort {
         }
 
         int outputBlockIndex = 0;
-        while (outputBlockIndex < inputBlockFiles.size()) {
-            PriorityQueue<Integer> bufferedNumbers = new PriorityQueue<>(inputBlockFiles.size());
-            for (BufferedReader bufferedReader : inputBlockFiles) {
-                try {
-                    String line;
-                    if ((line = bufferedReader.readLine()) != null) {
-                        bufferedNumbers.add(Integer.parseInt(line));
+        String fileName = "merged-sorted.txt";
+        try (PrintWriter pw = new PrintWriter(new FileWriter(Paths.get(phase2Resource.toString(), fileName).toFile()))) {
+            while (outputBlockIndex < inputBlockFiles.size()) {
+                PriorityQueue<Integer> bufferedNumbers = new PriorityQueue<>(inputBlockFiles.size());
+                for (BufferedReader bufferedReader : inputBlockFiles) {
+                    try {
+                        String line;
+                        if ((line = bufferedReader.readLine()) != null) {
+                            bufferedNumbers.add(Integer.parseInt(line));
+                        }
+                    } catch (IOException ignored) {
                     }
-                } catch (IOException ignored) {
                 }
-            }
 
-            String fileName = "merged-block-" + outputBlockIndex + ".txt";
-            try (PrintWriter pw = new PrintWriter(new FileWriter(Paths.get(phase2Resource.toString(), fileName).toFile()))) {
+
                 // Dump merged numbers to disk.
-                while (!bufferedNumbers.isEmpty()) pw.println(bufferedNumbers.poll());
-            } catch (IOException ignored) {
+                while (!bufferedNumbers.isEmpty())
+                    pw.println(bufferedNumbers.poll());
+                outputBlockIndex++;
             }
-
-            outputBlockIndex++;
+        } catch (IOException ignored) {
         }
 
         if (corruptedFiles.size() > 0) {
