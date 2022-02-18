@@ -6,6 +6,16 @@ import java.util.LinkedList;
 import java.util.PriorityQueue;
 import java.util.Scanner;
 
+class Element {
+    public int value;
+    public int fileIndex;
+
+    public Element(int value, int fileIndex) {
+        this.value = value;
+        this.fileIndex = fileIndex;
+    }
+}
+
 public class TwoPhaseMultiWayMergeSort {
     public final QuickSort quickSort = new QuickSort();
     public Path phase1Resource = Paths.get("resources", "phase_1");
@@ -74,26 +84,28 @@ public class TwoPhaseMultiWayMergeSort {
             }
         }
 
-        int outputBlockIndex = 0;
         String fileName = "merged-sorted.txt";
         try (PrintWriter pw = new PrintWriter(new FileWriter(Paths.get(phase2Resource.toString(), fileName).toFile()))) {
-            while (outputBlockIndex < inputBlockFiles.size()) {
-                PriorityQueue<Integer> bufferedNumbers = new PriorityQueue<>(inputBlockFiles.size());
-                for (BufferedReader bufferedReader : inputBlockFiles) {
-                    try {
-                        String line;
-                        if ((line = bufferedReader.readLine()) != null) {
-                            bufferedNumbers.add(Integer.parseInt(line));
-                        }
-                    } catch (IOException ignored) {
+            PriorityQueue<Element> bufferedNumbers = new PriorityQueue<>(inputBlockFiles.size(), (a, b) -> a.value - b.value);
+            for (int i = 0; i < inputBlockFiles.size(); i++) {
+                BufferedReader bufferedReader = inputBlockFiles.get(i);
+                try {
+                    String line;
+                    if ((line = bufferedReader.readLine()) != null) {
+                        bufferedNumbers.add(new Element(Integer.parseInt(line), i));
                     }
+                } catch (IOException ignored) {
                 }
+            }
 
-
-                // Dump merged numbers to disk.
-                while (!bufferedNumbers.isEmpty())
-                    pw.println(bufferedNumbers.poll());
-                outputBlockIndex++;
+            // Dump merged numbers to disk.
+            while (!bufferedNumbers.isEmpty()) {
+                Element minElement = bufferedNumbers.poll();
+                pw.println(minElement.value);
+                String line;
+                if ((line = inputBlockFiles.get(minElement.fileIndex).readLine()) != null) {
+                    bufferedNumbers.add(new Element(Integer.parseInt(line), minElement.fileIndex));
+                }
             }
         } catch (IOException ignored) {
         }
