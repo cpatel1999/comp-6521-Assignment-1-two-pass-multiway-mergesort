@@ -52,7 +52,7 @@ public class TwoPhaseMultiWayMergeSort {
                 display(numberList, "Block-" + (currentBlock + 1) + " before sorting");
                 quickSort.sort(numberList); /* In place sorting */
                 System.out.println();
-                display(numberList, "Block-" + (currentBlock + 1) + " after sorting");
+                display(numberList, "Block-" + (currentBlock + 1) + " after sorting (QuickSort)");
 
                 Path outputFile = Paths.get(phase1Resource.toString(), "block-" + currentBlock + ".txt");
                 try (PrintWriter printWriter = new PrintWriter(new FileWriter(outputFile.toFile()))) {
