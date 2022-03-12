@@ -30,7 +30,8 @@ public class TwoPhaseMultiWayMergeSort {
         long end = System.nanoTime();
 
         System.out.println("-------------------Total Time------------------");
-        System.out.println(end - start);
+        System.out.println((end - start) + " nanoseconds");
+        System.out.println(((end - start) / 1000000000) + " seconds");
     }
 
     public ArrayList<Path> runPhase1(int bufferSize) {
@@ -51,19 +52,21 @@ public class TwoPhaseMultiWayMergeSort {
                     }
                 }
 
-                display(numberList, "Block-" + (currentBlock + 1) + " before sorting");
 
-                // Quick sort
                 Integer[] arr = new Integer[numberList.size()];
                 arr = numberList.toArray(arr);
+
+                display(arr, "Block-" + (currentBlock + 1) + " before sorting");
+
+                // Quick sort
                 Arrays.sort(arr);
 
                 System.out.println();
-                display(numberList, "Block-" + (currentBlock + 1) + " after sorting (QuickSort)");
+                display(arr, "Block-" + (currentBlock + 1) + " after sorting (QuickSort)");
 
                 Path outputFile = Paths.get(phase1Resource.toString(), "block-" + currentBlock + ".txt");
                 try (PrintWriter printWriter = new PrintWriter(new FileWriter(outputFile.toFile()))) {
-                    for (Integer num : numberList) {
+                    for (Integer num : arr) {
                         printWriter.println(num);
                     }
                 }
@@ -153,7 +156,7 @@ public class TwoPhaseMultiWayMergeSort {
         }
     }
 
-    public void display(List<Integer> list, String title) {
+    public void display(Integer[] list, String title) {
         if (!title.isEmpty()) {
             System.out.println(title);
         }
