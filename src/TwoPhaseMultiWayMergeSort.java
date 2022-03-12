@@ -1,10 +1,7 @@
 import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.PriorityQueue;
-import java.util.Scanner;
+import java.util.*;
 
 class Element {
     public int value;
@@ -23,12 +20,17 @@ public class TwoPhaseMultiWayMergeSort {
     private int totalTuples = 0;
 
     public void twoPhaseSort(int bufferSize) {
+        long start = System.nanoTime();
         System.out.println("----------------------Phase 1--------------------");
         System.out.println("-------------------------------------------------");
         ArrayList<Path> fileList = runPhase1(bufferSize);
         System.out.println("----------------------Phase 2--------------------");
         System.out.println("-------------------------------------------------");
         runPhase2(fileList, bufferSize);
+        long end = System.nanoTime();
+
+        System.out.println("-------------------Total Time------------------");
+        System.out.println(end - start);
     }
 
     public ArrayList<Path> runPhase1(int bufferSize) {
@@ -37,7 +39,7 @@ public class TwoPhaseMultiWayMergeSort {
         int currentBlock = 0;
         try (Scanner fileReader = new Scanner(new FileReader("resources/input.txt"))) {
             while (fileReader.hasNextLine()) {
-                LinkedList<Integer> numberList = new LinkedList<>();
+                List<Integer> numberList = new ArrayList<>();
                 while (fileReader.hasNextLine()) {
                     int number = Integer.parseInt(fileReader.nextLine().trim());
                     numberList.add(number);
@@ -50,7 +52,12 @@ public class TwoPhaseMultiWayMergeSort {
                 }
 
                 display(numberList, "Block-" + (currentBlock + 1) + " before sorting");
-                quickSort.sort(numberList); /* In place sorting */
+
+                // Quick sort
+                Integer[] arr = new Integer[numberList.size()];
+                arr = numberList.toArray(arr);
+                Arrays.sort(arr);
+
                 System.out.println();
                 display(numberList, "Block-" + (currentBlock + 1) + " after sorting (QuickSort)");
 
@@ -64,6 +71,7 @@ public class TwoPhaseMultiWayMergeSort {
                 referenceFilePaths.add(outputFile);
                 currentBlock++;
             }
+            System.out.println();
         } catch (FileNotFoundException e) {
             System.out.println("File not found!");
             System.exit(0);
@@ -145,7 +153,7 @@ public class TwoPhaseMultiWayMergeSort {
         }
     }
 
-    public void display(LinkedList<Integer> list, String title) {
+    public void display(List<Integer> list, String title) {
         if (!title.isEmpty()) {
             System.out.println(title);
         }
